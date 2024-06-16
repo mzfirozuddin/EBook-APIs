@@ -1,8 +1,12 @@
 import express, { NextFunction, Request, Response } from "express";
 import createHttpError, { HttpError } from "http-errors";
 import { config } from "./config/config";
+import userRouter from "./user/userRouter";
 
 const app = express();
+
+// Register user router
+app.use("/api/users", userRouter);
 
 // Global Error Handler
 app.use((err: HttpError, req: Request, res: Response, next: NextFunction) => {

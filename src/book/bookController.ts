@@ -4,8 +4,11 @@ import {
     uploadPdfOnCloudinary,
 } from "../config/cloudinary";
 import createHttpError from "http-errors";
+import { Book } from "./bookModel";
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
+    const { title, genre } = req.body;
+
     // console.log("Files", req.files);
     //: Given type to req.files
     const files = req.files as { [fieldName: string]: Express.Multer.File[] };
@@ -67,7 +70,25 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
     // console.log("uploadCoverImageResult", uploadCoverImageResult);
     // console.log("uploadPdfBookResult", uploadPdfBookResult);
 
-    res.json({ msg: "OK" });
+    try {
+        //: Create book entry in DB
+        const newBook = await Book.create({
+            title,
+            genre,
+            author: "66707b6ad2b77424d0e24289", //!TODO: We have to make it dynamic
+            coverImage: uploadCoverImageResult.secure_url,
+            file: uploadPdfBookResult.secure_url,
+        });
+
+        res.status(201).json({
+            id: newBook._id,
+            msg: "Book created successfully.",
+        });
+    } catch (err) {
+        return next(
+            createHttpError(500, "Error while create book entry in DB!")
+        );
+    }
 };
 
 export { createBook };

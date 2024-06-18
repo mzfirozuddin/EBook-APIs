@@ -5,6 +5,7 @@ import {
 } from "../config/cloudinary";
 import createHttpError from "http-errors";
 import { Book } from "./bookModel";
+import { AuthRequest } from "../middlewares/authenticate";
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
     const { title, genre } = req.body;
@@ -71,13 +72,15 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
     // console.log("uploadPdfBookResult", uploadPdfBookResult);
 
     // @ts-ignore
-    console.log("userId: ", req.userId);
+    // console.log("userId: ", req.userId);
+
+    const _req = req as AuthRequest;
     try {
         //: Create book entry in DB
         const newBook = await Book.create({
             title,
             genre,
-            author: "66707b6ad2b77424d0e24289", //!TODO: We have to make it dynamic
+            author: _req.userId,
             coverImage: uploadCoverImageResult.secure_url,
             file: uploadPdfBookResult.secure_url,
         });

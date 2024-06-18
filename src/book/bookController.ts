@@ -70,6 +70,8 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
     // console.log("uploadCoverImageResult", uploadCoverImageResult);
     // console.log("uploadPdfBookResult", uploadPdfBookResult);
 
+    // @ts-ignore
+    console.log("userId: ", req.userId);
     try {
         //: Create book entry in DB
         const newBook = await Book.create({

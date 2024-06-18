@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { v2 as cloudinary } from "cloudinary";
 import { config } from "./config";
 
@@ -24,8 +25,14 @@ const uploadImageOnCloudinary = async (
             format: fileMimeType,
         });
 
+        // Delete file from local
+        await fs.promises.unlink(filePath);
+
         return response;
     } catch (err) {
+        // Delete file from local if there is any issue when uploading
+        fs.unlinkSync(filePath);
+
         console.log("Error while uploading image on cloudinary", err);
         return null;
     }
@@ -48,8 +55,14 @@ const uploadPdfOnCloudinary = async (
             format: fileMimeType,
         });
 
+        // Delete file from local
+        await fs.promises.unlink(filePath);
+
         return response;
     } catch (err) {
+        // Delete file from local
+        fs.unlinkSync(filePath);
+
         console.log("Error while uploading pdf on cloudinary", err);
         return null;
     }

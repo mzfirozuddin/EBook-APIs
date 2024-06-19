@@ -96,4 +96,105 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-export { createBook };
+const updateBook = async (req: Request, res: Response, next: NextFunction) => {
+    const { title, genre } = req.body;
+    const bookId = req.params.bookId;
+
+    try {
+        //: Check book present in DB or not
+        const book = await Book.findOne({ _id: bookId });
+        if (!book) {
+            return next(createHttpError(404, "Book not found!"));
+        }
+
+        //: Check Access
+        const _req = req as AuthRequest;
+        if (book.author.toString() !== _req.userId) {
+            return next(
+                createHttpError(
+                    403,
+                    "Unauthorized access! You can not update others book."
+                )
+            );
+        }
+
+        //: Given type to req.files
+        const files = req.files as {
+            [fieldName: string]: Express.Multer.File[];
+        };
+
+        //? Handle coverImage
+        let coverImageCloudUrl = "";
+        if (
+            files &&
+            Array.isArray(files.coverImage) &&
+            files.coverImage.length > 0
+        ) {
+            // mimetype = "images/png" => But we need only "png". Thats why we split the string
+            const coverImageMimeType = files.coverImage[0].mimetype
+                .split("/")
+                .at(-1);
+            const coverImageFileName = files.coverImage[0].filename;
+            const coverImageFilePath = files.coverImage[0].path;
+
+            //: Upload coverImage on cloudinary
+            const uploadCoverImageResult = await uploadImageOnCloudinary(
+                coverImageFilePath,
+                coverImageFileName as string,
+                coverImageMimeType as string
+            );
+
+            if (!uploadCoverImageResult) {
+                return next(
+                    createHttpError(500, "Error while uploading the file!")
+                );
+            }
+
+            coverImageCloudUrl = uploadCoverImageResult?.secure_url;
+        }
+
+        //? Handle book pdf file
+        let bookPdfCloudUrl = "";
+        if (files && Array.isArray(files.file) && files.file.length > 0) {
+            const bookFileName = files.file[0].filename;
+            const bookFilePath = files.file[0].path;
+
+            //: Upload pdf book on cloudinary
+            const uploadPdfBookResult = await uploadPdfOnCloudinary(
+                bookFilePath,
+                bookFileName as string,
+                "pdf"
+            );
+
+            if (!uploadPdfBookResult) {
+                return next(
+                    createHttpError(500, "Error while uploading the file!")
+                );
+            }
+
+            bookPdfCloudUrl = uploadPdfBookResult.secure_url;
+        }
+
+        const updatedBook = await Book.findByIdAndUpdate(
+            { _id: bookId },
+            {
+                title: title,
+                genre: genre,
+                coverImage: coverImageCloudUrl
+                    ? coverImageCloudUrl
+                    : book.coverImage,
+                file: bookPdfCloudUrl ? bookPdfCloudUrl : book.file,
+            },
+            { new: true }
+        );
+
+        res.status(200).json({
+            data: updatedBook,
+            message: "Book updated successfully.",
+        });
+    } catch (err) {
+        return next(createHttpError(500, "Error While updateing the book!"));
+    }
+};
+
+export { createBook, updateBook };

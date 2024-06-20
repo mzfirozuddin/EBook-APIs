@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import {
+    deleteImageFromCloudinary,
+    deletePdfFromCloudinary,
     uploadImageOnCloudinary,
     uploadPdfOnCloudinary,
 } from "../config/cloudinary";
@@ -230,4 +232,56 @@ const getSingleBook = async (
     }
 };
 
-export { createBook, updateBook, listBooks, getSingleBook };
+const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
+    const bookId = req.params.bookId;
+
+    try {
+        //: Check book is present or not
+        const book = await Book.findOne({ _id: bookId });
+        if (!book) {
+            return next(createHttpError(404, "Book not found!"));
+        }
+
+        //: Check Access
+        const _req = req as AuthRequest;
+        if (book.author.toString() !== _req.userId) {
+            return next(
+                createHttpError(
+                    403,
+                    "Unauthorized access! You can not delete others book."
+                )
+            );
+        }
+
+        //: Now we have to delete files from Cloudinary
+        // For deleting files from cloudinary we have to provide publicId of asset.
+        // publicId => book-covers/otob0ocrvsrz3ymr90c3
+        // Url => https://res.cloudinary.com/drqredubp/image/upload/v1718822912/book-covers/otob0ocrvsrz3ymr90c3.png
+        //? Handle coverImage
+        const coverImageFileSplit = book.coverImage.split("/");
+        const coverImagePublicId =
+            coverImageFileSplit.at(-2) +
+            "/" +
+            coverImageFileSplit.at(-1)?.split(".").at(-2);
+        // console.log("coverImagePublicId: ", coverImagePublicId);
+
+        //? Handle book pdf file
+        const bookPdfFileSplit = book.file.split("/");
+        const bookPdfPublicId =
+            bookPdfFileSplit.at(-2) + "/" + bookPdfFileSplit.at(-1);
+        // console.log("bookPdfPublicId: ", bookPdfPublicId);
+
+        //: Delete CoverImage and Book pdf from cloudinary
+        await deleteImageFromCloudinary(coverImagePublicId);
+        await deletePdfFromCloudinary(bookPdfPublicId);
+
+        //: Delete book entry from DB
+        await Book.deleteOne({ _id: bookId });
+
+        res.sendStatus(204); // 204 for no response
+    } catch (err) {
+        return next(createHttpError(500, "Error while delete the book!"));
+    }
+};
+
+export { createBook, updateBook, listBooks, getSingleBook, deleteBook };

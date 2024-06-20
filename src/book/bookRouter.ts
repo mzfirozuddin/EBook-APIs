@@ -2,6 +2,7 @@ import path from "node:path";
 import express from "express";
 import {
     createBook,
+    deleteBook,
     getSingleBook,
     listBooks,
     updateBook,
@@ -38,5 +39,6 @@ router.patch(
 
 router.get("/", listBooks);
 router.get("/:bookId", getSingleBook);
+router.delete("/:bookId", authenticate, deleteBook);
 
 export default router;

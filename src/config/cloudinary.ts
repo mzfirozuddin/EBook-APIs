@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { v2 as cloudinary } from "cloudinary";
 import { config } from "./config";
+import createHttpError from "http-errors";
 
 // Configuration
 cloudinary.config({
@@ -68,5 +69,48 @@ const uploadPdfOnCloudinary = async (
     }
 };
 
-export { uploadImageOnCloudinary, uploadPdfOnCloudinary };
+const deleteImageFromCloudinary = async (imagePublicId: string) => {
+    try {
+        if (!imagePublicId) {
+            const error = createHttpError(404, "Image public Id is required!");
+            throw error;
+        }
+
+        await cloudinary.uploader.destroy(imagePublicId);
+    } catch (err) {
+        console.log("Error while deleting image from cloudinary", err);
+        const error = createHttpError(
+            500,
+            "Error while deleting image from cloudinary!"
+        );
+        throw error;
+    }
+};
+
+const deletePdfFromCloudinary = async (pdfPublicId: string) => {
+    try {
+        if (!pdfPublicId) {
+            const error = createHttpError(404, "Pdf public Id is required!");
+            throw error;
+        }
+
+        await cloudinary.uploader.destroy(pdfPublicId, {
+            resource_type: "raw",
+        });
+    } catch (err) {
+        console.log("Error while deleting pdf from cloudinary", err);
+        const error = createHttpError(
+            500,
+            "Error while deleting pdf from cloudinary!"
+        );
+        throw error;
+    }
+};
+
+export {
+    uploadImageOnCloudinary,
+    uploadPdfOnCloudinary,
+    deleteImageFromCloudinary,
+    deletePdfFromCloudinary,
+};
 // export default cloudinary;

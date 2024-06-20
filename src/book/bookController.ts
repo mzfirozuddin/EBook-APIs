@@ -153,6 +153,16 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
             }
 
             coverImageCloudUrl = uploadCoverImageResult?.secure_url;
+
+            //: Delete existing coverImage from cloudinary
+            //? Handle coverImage
+            const coverImageFileSplit = book.coverImage.split("/");
+            const coverImagePublicId =
+                coverImageFileSplit.at(-2) +
+                "/" +
+                coverImageFileSplit.at(-1)?.split(".").at(-2);
+
+            await deleteImageFromCloudinary(coverImagePublicId);
         }
 
         //? Handle book pdf file
@@ -175,6 +185,14 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
             }
 
             bookPdfCloudUrl = uploadPdfBookResult.secure_url;
+
+            //: Delete existing book pdf from cloudinary
+            //? Handle book pdf file
+            const bookPdfFileSplit = book.file.split("/");
+            const bookPdfPublicId =
+                bookPdfFileSplit.at(-2) + "/" + bookPdfFileSplit.at(-1);
+
+            await deletePdfFromCloudinary(bookPdfPublicId);
         }
 
         const updatedBook = await Book.findByIdAndUpdate(

@@ -5,6 +5,7 @@ export interface IBook {
     title: string;
     author: IUser;
     genre: string;
+    description: string;
     coverImage: string; // cloudinay url
     file: string; // cloudinay url
     createdAt: Date;

@@ -16,6 +16,10 @@ const bookSchema = new mongoose.Schema<IBook>(
             type: String,
             required: true,
         },
+        description: {
+            type: String,
+            required: true,
+        },
         coverImage: {
             type: String, // cloudinary url
             required: true,

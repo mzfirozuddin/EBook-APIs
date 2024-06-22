@@ -222,7 +222,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
 const listBooks = async (req: Request, res: Response, next: NextFunction) => {
     try {
         // TODO: Add pagination
-        const books = await Book.find();
+        const books = await Book.find().populate("author", "name");
         if (!books) {
             return next(createHttpError(400, "No book exists!"));
         }
@@ -241,7 +241,10 @@ const getSingleBook = async (
     const bookId = req.params.bookId;
 
     try {
-        const book = await Book.findOne({ _id: bookId });
+        const book = await Book.findOne({ _id: bookId }).populate(
+            "author",
+            "name"
+        );
         if (!book) {
             return next(createHttpError(404, "Book not found!"));
         }

@@ -10,7 +10,7 @@ import { Book } from "./bookModel";
 import { AuthRequest } from "../middlewares/authenticate";
 
 const createBook = async (req: Request, res: Response, next: NextFunction) => {
-    const { title, genre } = req.body;
+    const { title, genre, description } = req.body;
 
     // console.log("Files", req.files);
     //: Given type to req.files
@@ -82,6 +82,7 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
         const newBook = await Book.create({
             title,
             genre,
+            description,
             author: _req.userId,
             coverImage: uploadCoverImageResult.secure_url,
             file: uploadPdfBookResult.secure_url,
@@ -99,7 +100,7 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const updateBook = async (req: Request, res: Response, next: NextFunction) => {
-    const { title, genre } = req.body;
+    const { title, genre, description } = req.body;
     const bookId = req.params.bookId;
 
     try {
@@ -200,6 +201,7 @@ const updateBook = async (req: Request, res: Response, next: NextFunction) => {
             {
                 title: title,
                 genre: genre,
+                description: description,
                 coverImage: coverImageCloudUrl
                     ? coverImageCloudUrl
                     : book.coverImage,
